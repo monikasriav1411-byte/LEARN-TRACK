@@ -33,3 +33,30 @@ Learn Track is a web-based student quiz and learning management platform designe
 - Responsive Web Design
 
 ## Project Structure
+Learn Track/
+├── Admin Dashboard
+├── Teacher Dashboard
+├── Student Dashboard
+├── Quiz Management
+├── Reports & Analytics
+└── Assets
+
+
+## Objectives
+- Simplify quiz management for educational institutions
+- Improve student engagement through online assessments
+- Provide performance tracking and analytics
+- Enable efficient management of teachers and students
+
+## Future Enhancements
+- AI-based quiz generation
+- Email notifications
+- Mobile application support
+- Advanced analytics dashboard
+- Cloud database integration
+
+## Author
+Monikasri 
+
+## License
+This project is developed for educational and academic purposes.
