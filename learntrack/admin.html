@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<title>LearnTrack Admin Dashboard</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Arial,Helvetica,sans-serif;background:#F1F5F9;min-height:100vh;}
+.container{display:flex;min-height:100vh;}
+
+/* SIDEBAR */
+.sidebar{
+  width:220px;background:linear-gradient(180deg,#1E3A8A,#312E81);
+  color:white;padding:20px 14px;display:flex;flex-direction:column;
+  position:fixed;top:0;left:0;bottom:0;
+}
+.sidebar h2{font-size:19px;margin-bottom:26px;padding:0 6px;}
+.sidebar ul{list-style:none;flex:1;}
+.sidebar ul li{
+  padding:11px 14px;margin-bottom:5px;cursor:pointer;
+  border-radius:8px;transition:0.2s;font-size:14px;
+  display:flex;align-items:center;gap:9px;
+}
+.sidebar ul li:hover{background:rgba(255,255,255,0.15);transform:translateX(4px);}
+.sidebar ul li.active{background:rgba(255,255,255,0.22);font-weight:700;}
+
+/* MAIN */
+.main{margin-left:220px;flex:1;padding:26px;}
+.section{display:none;}
+.section.active{display:block;}
+
+/* BANNER */
+.banner{
+  background:linear-gradient(to right,#2563EB,#7C3AED,#06B6D4);
+  color:white;padding:26px;border-radius:12px;
+  margin-bottom:24px;box-shadow:0 4px 14px rgba(0,0,0,0.12);
+}
+.banner h1{font-size:24px;}
+.banner p{margin-top:8px;opacity:0.9;font-size:13px;}
+
+/* STAT CARDS */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;margin-bottom:24px;}
+.card{padding:20px;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,0.08);transition:0.25s;}
+.card:hover{transform:translateY(-4px);}
+.card h3{font-size:13px;font-weight:600;opacity:0.9;}
+.card p{font-size:28px;font-weight:bold;margin-top:8px;}
+.blue  {background:linear-gradient(135deg,#2563EB,#3B82F6);color:white;}
+.green {background:linear-gradient(135deg,#10B981,#22C55E);color:white;}
+.purple{background:linear-gradient(135deg,#7C3AED,#8B5CF6);color:white;}
+.cyan  {background:linear-gradient(135deg,#0891b2,#06B6D4);color:white;}
+
+/* RECENT */
+.recent{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.box{background:white;padding:20px;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,0.07);}
+.box h3{font-size:14px;margin-bottom:12px;color:#1e3a8a;}
+.box ul{padding-left:18px;font-size:13px;color:#475569;line-height:2;}
+
+/* PAGE HEADER */
+.page-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
+.page-hd h2{font-size:19px;color:#1e293b;}
+
+/* BUTTONS */
+.btn{
+  padding:9px 17px;border:none;border-radius:8px;cursor:pointer;
+  font-size:13px;font-weight:600;transition:0.2s;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.btn:hover{filter:brightness(1.1);transform:translateY(-1px);}
+.btn-blue  {background:#2563EB;color:white;}
+.btn-green {background:#10B981;color:white;}
+.btn-red   {background:#ef4444;color:white;}
+.btn-gray  {background:#e2e8f0;color:#475569;}
+.btn-sm    {padding:5px 11px;font-size:12px;border-radius:6px;}
+
+/* TABLE */
+.tbl-wrap{background:white;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,0.07);overflow:hidden;margin-bottom:20px;}
+table{width:100%;border-collapse:collapse;}
+th{background:#f8fafc;padding:10px 13px;text-align:left;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #e2e8f0;}
+td{padding:10px 13px;font-size:13px;color:#334155;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#fafbff;}
+.td-btns{display:flex;gap:6px;}
+
+/* BADGE */
+.badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+.badge-green{background:#dcfce7;color:#16a34a;}
+.badge-blue {background:#dbeafe;color:#1d4ed8;}
+.badge-red  {background:#fee2e2;color:#dc2626;}
+
+/* FORM CARD */
+.form-card{background:white;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,0.07);padding:20px;margin-bottom:18px;display:none;}
+.form-card.open{display:block;}
+.form-card h3{font-size:14px;color:#1e3a8a;margin-bottom:14px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.form-row.one{grid-template-columns:1fr;}
+.fg{display:flex;flex-direction:column;gap:5px;}
+.fg label{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;}
+.fg input,.fg select{
+  padding:9px 11px;border:1.5px solid #e2e8f0;border-radius:8px;
+  font-size:13px;color:#334155;outline:none;transition:border-color .2s;font-family:inherit;
+}
+.fg input:focus,.fg select:focus{border-color:#2563EB;}
+.form-actions{display:flex;gap:10px;margin-top:6px;}
+
+/* SETTINGS */
+.set-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.set-card{background:white;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,0.07);padding:20px;}
+.set-card h3{font-size:14px;color:#1e3a8a;margin-bottom:14px;}
+.set-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f1f5f9;}
+.set-row:last-child{border-bottom:none;}
+.set-label{font-size:13px;color:#334155;}
+.toggle{width:40px;height:22px;border-radius:11px;background:#e2e8f0;position:relative;cursor:pointer;border:none;transition:background .2s;}
+.toggle.on{background:#2563EB;}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:white;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2);}
+.toggle.on::after{transform:translateX(18px);}
+
+/* REPORT CARDS */
+.rep-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-bottom:20px;}
+.rep-card{background:white;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,0.07);padding:20px;transition:0.2s;}
+.rep-card:hover{transform:translateY(-3px);}
+.rep-card .ico{font-size:28px;margin-bottom:8px;}
+.rep-card h3{font-size:14px;font-weight:700;color:#1e293b;margin-bottom:5px;}
+.rep-card p{font-size:12px;color:#64748b;margin-bottom:13px;line-height:1.5;}
+
+/* PROGRESS */
+.prog-bar{height:7px;background:#e2e8f0;border-radius:4px;overflow:hidden;margin-top:5px;}
+.prog-fill{height:100%;border-radius:4px;}
+
+/* REPORT OUTPUT */
+.rep-out{background:white;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,0.07);padding:20px;margin-top:18px;display:none;}
+.rep-out-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.rep-out-head h3{font-size:14px;color:#1e3a8a;}
+
+/* TOAST */
+#toast{
+  position:fixed;bottom:22px;right:22px;
+  background:#1e293b;color:white;padding:10px 18px;
+  border-radius:10px;font-size:13px;font-weight:600;
+  box-shadow:0 6px 20px rgba(0,0,0,.2);border-left:3px solid #06B6D4;
+  opacity:0;transform:translateY(8px);transition:opacity .3s,transform .3s;
+  z-index:999;pointer-events:none;
+}
+#toast.show{opacity:1;transform:translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <h2>🎓 LearnTrack</h2>
+    <ul>
+      <li class="active" onclick="show('dashboard',this)">⊞ Dashboard</li>
+      <li onclick="show('departments',this)">🏛️ Departments</li>
+      <li onclick="show('teachers',this)">👨‍🏫 Teachers</li>
+      <li onclick="show('students',this)">🎓 Students</li>
+      <li onclick="show('reports',this)">📊 Reports</li>
+      <li onclick="show('settings',this)">⚙️ Settings</li>
+    </ul>
+  </div>
+
+  <div class="main">
+
+    <!-- ── DASHBOARD ── -->
+    <div id="dashboard" class="section active">
+      <div class="banner">
+        <h1>Welcome Back, Admin 👋</h1>
+        <p>Manage departments, teachers, and student accounts easily with LearnTrack.</p>
+      </div>
+      <div class="cards">
+        <div class="card blue">  <h3>Total Departments</h3><p id="deptCount">0</p></div>
+        <div class="card green"> <h3>Total Students</h3>   <p id="stuCount">0</p></div>
+        <div class="card purple"><h3>Total Teachers</h3>   <p id="tchCount">0</p></div>
+        <div class="card cyan">  <h3>Reports</h3>          <p>4</p></div>
+      </div>
+
+      <!-- Progress -->
+      <div class="tbl-wrap" style="padding:18px;margin-bottom:20px;">
+        <h3 style="font-size:14px;color:#1e3a8a;margin-bottom:14px;">📈 Department Enrollment Progress</h3>
+        <div id="progArea"><p style="color:#94a3b8;font-size:13px;">No departments yet.</p></div>
+      </div>
+
+      <div class="recent">
+        <div class="box"><h3>Recently Added Teachers</h3><ul id="recentTch"><li>No teachers added yet</li></ul></div>
+        <div class="box"><h3>Recently Added Students</h3><ul id="recentStu"><li>No students added yet</li></ul></div>
+      </div>
+    </div>
+
+    <!-- ── DEPARTMENTS ── -->
+    <div id="departments" class="section">
+      <div class="page-hd">
+        <h2>🏛️ Departments</h2>
+        <button class="btn btn-blue" onclick="toggle('deptForm')">＋ Add Department</button>
+      </div>
+      <div class="form-card" id="deptForm">
+        <h3>Add Department</h3>
+        <div class="form-row">
+          <div class="fg"><label>Name</label><input id="dName" placeholder="e.g. Computer Science"/></div>
+          <div class="fg"><label>Head</label><input id="dHead" placeholder="e.g. Dr. Smith"/></div>
+        </div>
+        <div class="form-row one">
+          <div class="fg"><label>Capacity (max students)</label><input id="dCap" type="number" min="0" placeholder="e.g. 60" onchange="if(this.value<0)this.value=0;"/></div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-blue" onclick="saveDept()">💾 Save</button>
+          <button class="btn btn-gray" onclick="toggle('deptForm')">Cancel</button>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Department</th><th>Head</th><th>Students</th><th>Capacity</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="deptTb"><tr><td colspan="7" style="color:#94a3b8;text-align:center;padding:18px;">No departments yet.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── TEACHERS ── -->
+    <div id="teachers" class="section">
+      <div class="page-hd">
+        <h2>👨‍🏫 Teachers</h2>
+        <button class="btn btn-blue" onclick="toggle('tchForm')">＋ Add Teacher</button>
+      </div>
+      <div class="form-card" id="tchForm">
+        <h3>Add Teacher</h3>
+        <div class="form-row">
+          <div class="fg"><label>Full Name</label><input id="tName" placeholder="e.g. Dr. Jane Smith"/></div>
+          <div class="fg">
+<label>Email</label>
+<input id="tEmail" disabled placeholder="Auto generated"/>
+</div>
+        </div>
+        <div class="form-row">
+          <div class="fg"><label>Department</label>
+            <select id="tDept">
+              <option value="">-- Select Department --</option>
+              <option>IT – Information Technology</option>
+              <option>CSE – Computer Science & Engineering</option>
+              <option>ECE – Electronics & Communication Engg.</option>
+              <option>EEE – Electrical & Electronics Engg.</option>
+              <option>Mechanical Engineering</option>
+              <option>Civil Engineering</option>
+              <option>Chemical Engineering</option>
+              <option>Biotechnology</option>
+              <option>Mathematics</option>
+              <option>Physics</option>
+              <option>English & Literature</option>
+              <option>MBA – Business Administration</option>
+            </select>
+          </div>
+          <div class="fg"><label>Subject</label><input id="tSubject" placeholder="e.g. Data Structures"/></div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-blue" onclick="saveTch()">💾 Save</button>
+          <button class="btn btn-gray" onclick="toggle('tchForm')">Cancel</button>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Password</th><th>Department</th><th>Subject</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="tchTb"><tr><td colspan="7" style="color:#94a3b8;text-align:center;padding:18px;">No teachers yet.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── STUDENTS ── -->
+    <div id="students" class="section">
+      <div class="page-hd">
+        <h2>🎓 Students</h2>
+        <button class="btn btn-blue" onclick="toggle('stuForm')">＋ Add Student</button>
+
+<input type="file" id="excelFile" accept=".xlsx,.xls" style="margin-left:10px">
+<input type="file" id="excelFile">
+<button onclick="uploadExcel()">Upload Students</button>
+
+<button class="btn btn-green" onclick="generateStudents()">⚡ Generate Credentials</button>
+
+<button class="btn btn-green" onclick="downloadCredentials()">⬇ Download Emails</button>
+      </div>
+      <div class="form-card" id="stuForm">
+        <h3>Add Student</h3>
+        <div class="form-row">
+          <div class="fg"><label>Full Name</label><input id="sName" placeholder="e.g. John Doe"/></div>
+          <div class="fg"><label>Student ID</label><input id="sId" placeholder="Auto if blank"/></div>
+        </div>
+        <div class="form-row">
+          <div class="fg"><label>Department</label>
+            <select id="sDept">
+          <option value="">-- Select Department --</option>
+              <option>IT – Information Technology</option>
+              <option>CSE – Computer Science & Engineering</option>
+              <option>ECE – Electronics & Communication Engg.</option>
+              <option>EEE – Electrical & Electronics Engg.</option>
+              <option>Mechanical Engineering</option>
+              <option>Civil Engineering</option>
+              <option>Chemical Engineering</option>
+              <option>Biotechnology</option>
+              <option>Mathematics</option>
+              <option>Physics</option>
+              <option>English & Literature</option>
+              <option>MBA – Business Administration</option>
+            </select>
+          </div>
+          <div class="fg"><label>Year</label>
+            <select id="sYear"><option>Year 1</option><option>Year 2</option><option>Year 3</option><option>Year 4</option></select>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-blue" onclick="saveStu()">💾 Save</button>
+          <button class="btn btn-gray" onclick="toggle('stuForm')">Cancel</button>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Reg No</th><th>Name</th><th>Department</th><th>Email</th><th>Password</th><th>Status</th></tr></thead>
+          <tbody id="stuTb"><tr><td colspan="7" style="color:#94a3b8;text-align:center;padding:18px;">No students yet.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── REPORTS ── -->
+    <div id="reports" class="section">
+      <div class="page-hd"><h2>📊 Reports</h2></div>
+      <div class="rep-grid">
+        <div class="rep-card"><div class="ico">🏛️</div><h3>Departments</h3><p>Overview of all departments and enrollment.</p><button class="btn btn-blue btn-sm" onclick="viewReport('dept')">📄 View</button></div>
+        <div class="rep-card"><div class="ico">👨‍🏫</div><h3>Teachers</h3><p>Full faculty list with departments and subjects.</p><button class="btn btn-blue btn-sm" onclick="viewReport('tch')">📄 View</button></div>
+        <div class="rep-card"><div class="ico">🎓</div><h3>Students</h3><p>Enrollment report with IDs and years.</p><button class="btn btn-blue btn-sm" onclick="viewReport('stu')">📄 View</button></div>
+        <div class="rep-card"><div class="ico">📈</div><h3>Summary</h3><p>Overall totals and admin summary.</p><button class="btn btn-blue btn-sm" onclick="viewReport('sum')">📄 View</button></div>
+      </div>
+      <div class="rep-out" id="repOut">
+        <div class="rep-out-head">
+          <h3 id="repTitle">Report</h3>
+          <button class="btn btn-gray btn-sm" onclick="document.getElementById('repOut').style.display='none'">✕ Close</button>
+        </div>
+        <pre id="repContent" style="font-size:12.5px;line-height:1.8;color:#334155;white-space:pre-wrap;"></pre>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS ── -->
+    <div id="settings" class="section">
+      <div class="page-hd"><h2>⚙️ Settings</h2></div>
+      <div class="set-grid">
+        <div class="set-card">
+          <h3>Admin Profile</h3>
+          <div class="form-row one" style="margin-bottom:12px;"><div class="fg"><label>Name</label><input value="Super Admin"/></div></div>
+          <div class="form-row one" style="margin-bottom:12px;"><div class="fg"><label>Email</label><input value="admin@learntrack.edu"/></div></div>
+          <div class="form-row one" style="margin-bottom:12px;"><div class="fg"><label>New Password</label><input type="password" placeholder="Leave blank to keep current"/></div></div>
+          <button class="btn btn-blue" onclick="toast('💾 Profile saved!')">💾 Save</button>
+        </div>
+        <div class="set-card">
+          <h3>College Info</h3>
+          <div class="form-row one" style="margin-bottom:12px;"><div class="fg"><label>College Name</label><input value="LearnTrack University"/></div></div>
+          <div class="form-row one" style="margin-bottom:12px;"><div class="fg"><label>Semester</label>
+            <select><option>Spring 2026</option><option>Fall 2025</option></select>
+          </div></div>
+          <button class="btn btn-blue" onclick="toast('💾 College info saved!')">💾 Save</button>
+        </div>
+        <div class="set-card">
+          <h3>Notifications</h3>
+          <div class="set-row"><span class="set-label">Email Alerts</span><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+          <div class="set-row"><span class="set-label">New Enrollment Alerts</span><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+          <div class="set-row"><span class="set-label">Report Ready Alerts</span><button class="toggle" onclick="this.classList.toggle('on')"></button></div>
+          <div class="set-row"><span class="set-label">System Updates</span><button class="toggle on" onclick="this.classList.toggle('on')"></button></div>
+        </div>
+        <div class="set-card">
+          <h3>Data Management</h3>
+          <p style="font-size:13px;color:#64748b;margin-bottom:14px;">Export or clear all admin data.</p>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <button class="btn btn-green" onclick="exportData()">⬇ Export All Data</button>
+            <button class="btn btn-red"   onclick="clearAll()">🗑 Clear All Data</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  let depts=[], teachers=[], students=[], excelData=[];
+  let dc=0, tc=0, sc=0;
+
+  // Navigation
+  function show(id, el){
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.querySelectorAll('.sidebar li').forEach(l=>l.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    el.classList.add('active');
+    if(id==='dashboard') refreshDash();
+    if(id==='teachers'||id==='students') syncDropdowns();
+  }
+
+  function toggle(id){
+    document.getElementById(id).classList.toggle('open');
+  }
+
+  // Toast
+  function toast(msg){
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.classList.add('show');
+    clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2800);
+  }
+
+  // ── DEPARTMENTS
+ async function saveDept(){
+
+  const name = document.getElementById('dName').value.trim();
+  if(!name){
+    toast('⚠ Enter a department name');
+    return;
+  }
+
+  const data = {
+    name: name,
+    head: document.getElementById('dHead').value,
+    capacity: parseInt(document.getElementById('dCap').value) || 60
+  };
+
+  try {
+    const res = await fetch("http://localhost/learntrack/backend/add_department.php",{
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+    console.log(result);
+
+    if(result.status === "success"){
+      toast("✅ Department saved to DB");
+    } else {
+      alert("Error: " + result.msg);
+    }
+
+  } catch(err){
+    console.error(err);
+    alert("Server error");
+  }
+}
+
+  async function renderDept(){
+
+  const res = await fetch("http://localhost/learntrack/backend/get_departments.php");
+  const data = await res.json();
+
+  const tb = document.getElementById('deptTb');
+  tb.innerHTML = "";
+
+  data.forEach((d,index) => {
+    tb.innerHTML += `
+      <tr>
+        <td>${index+1}</td>
+        <td>${d.name}</td>
+        <td>${d.head}</td>
+        <td>-</td>
+        <td>${d.capacity}</td>
+        <td><span class="badge badge-blue">Active</span></td>
+        <td>-</td>
+      </tr>
+    `;
+  });
+
+  document.getElementById('deptCount').innerText = data.length;
+}
+  
+  function delDept(id){
+    if(!confirm('Delete this department?'))return;
+    depts=depts.filter(d=>d.id!==id); renderDepts(); syncDropdowns(); toast('🗑 Deleted.');
+  }
+  function editDept(id){
+    const d=depts.find(x=>x.id===id); if(!d)return;
+    document.getElementById('dName').value=d.name;
+    document.getElementById('dHead').value=d.head==='—'?'':d.head;
+    document.getElementById('dCap').value=d.cap;
+    depts=depts.filter(x=>x.id!==id);
+    document.getElementById('deptForm').classList.add('open');
+    toast('✏ Edit and re-save.');
+  }
+
+  // ── TEACHERS
+ async function saveTch(){
+
+  const name = document.getElementById('tName').value.trim();
+  if(!name){
+    toast('⚠ Enter teacher name');
+    return;
+  }
+
+  const email = name.toLowerCase().replace(/ /g,'') + "@learntrack.in";
+  const pass = Math.random().toString(36).slice(-8);
+
+  const data = {
+    name: name,
+    email: email,
+    pass: pass,
+    dept: document.getElementById('tDept').value,
+    subject: document.getElementById('tSubject').value
+  };
+
+  try {
+    const res = await fetch("http://localhost/learntrack/backend/add_teacher.php", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+    console.log(result);
+
+    if(result.status === "success"){
+      toast("✅ Teacher saved to DB");
+    } else {
+      alert("Error: " + result.msg);
+    }
+
+  } catch(err){
+    console.error(err);
+    alert("Server error");
+  }
+}
+
+  async function renderTch(){
+
+  const res = await fetch("http://localhost/learntrack/backend/get_teachers.php");
+  const data = await res.json();
+
+  const tb = document.getElementById('tchTb');
+  tb.innerHTML = "";
+
+  data.forEach((t,index) => {
+    tb.innerHTML += `
+      <tr>
+        <td>${index+1}</td>
+        <td>${t.name}</td>
+        <td>${t.email}</td>
+        <td>${t.password || '-'}</td>
+        <td>${t.department}</td>
+        <td>${t.subject}</td>
+        <td><span class="badge badge-green">Active</span></td>
+        <td>-</td>
+      </tr>
+    `;
+  });
+}
+  function delTch(id){if(!confirm('Delete?'))return;teachers=teachers.filter(t=>t.id!==id);renderTch();toast('🗑 Deleted.');}
+  function editTch(id){
+    const t=teachers.find(x=>x.id===id);if(!t)return;
+    document.getElementById('tName').value=t.name;
+    document.getElementById('tEmail').value=t.email==='—'?'':t.email.replace('@learntrack.in','');
+    document.getElementById('tEmailPreview').textContent=t.email==='—'?'':t.email;
+    document.getElementById('tSubject').value=t.subject==='—'?'':t.subject;
+    document.getElementById('tDept').value=t.dept;
+    teachers=teachers.filter(x=>x.id!==id);
+    document.getElementById('tchForm').classList.add('open'); toast('✏ Edit and re-save.');
+  }
+
+  // ── STUDENTS
+ async function saveStu(){
+
+  const name = document.getElementById('sName').value.trim();
+  const dept = document.getElementById('sDept').value;
+
+  if(!name || !dept){
+    toast('⚠ Enter all fields');
+    return;
+  }
+
+  // 🔥 Auto-generate email & password
+  const email = name.toLowerCase().replace(/ /g,'') + "@learntrack.in";
+  const pass = Math.random().toString(36).slice(-8);
+
+  const data = {
+    name: name,
+    dept: dept,
+    email: email,
+    pass: pass
+  };
+
+  try {
+    const res = await fetch("http://localhost/learntrack/backend/add_student.php", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(data)
+    });
+
+    const result = await res.json();
+    console.log("Server Response:", result);
+
+    if(result.status === "success"){
+
+      // 🎉 Show full details
+      toast(`✅ Student Added!
+Reg No: ${result.reg_no}
+Email: ${email}
+Password: ${pass}`);
+
+      // 🔄 Clear form
+      document.getElementById('sName').value = "";
+      document.getElementById('sDept').value = "";
+
+    } else {
+      alert("❌ Error: " + (result.msg || "Unknown error"));
+    }
+
+  } catch(err){
+    console.error("Fetch Error:", err);
+    alert("🚨 Server error");
+  }
+}
+  async function renderStu(){
+
+  const res = await fetch("http://localhost/learntrack/backend/get_students.php");
+  const data = await res.json();
+
+  console.log("Students:", data);
+
+  const tb = document.getElementById('stuTb');
+  tb.innerHTML = "";
+
+  data.forEach((s, index) => {
+    tb.innerHTML += `
+      <tr>
+        <td>${index+1}</td>
+        <td>${s.reg_no}</td>
+        <td>${s.name}</td>
+        <td>${s.department}</td>
+        <td>${s.email}</td>
+        <td>${s.password || '-'}</td>
+        <td><span class="badge badge-green">Active</span></td>
+      </tr>
+    `;
+  });
+}
+
+  function delStu(id){if(!confirm('Delete?'))return;students=students.filter(s=>s.id!==id);renderStu();toast('🗑 Deleted.');}
+  function editStu(id){
+    const s=students.find(x=>x.id===id);if(!s)return;
+    document.getElementById('sName').value=s.name;
+    document.getElementById('sId').value=s.sid;
+    syncDropdowns(); document.getElementById('sDept').value=s.dept;
+    document.getElementById('sYear').value=s.year;
+    students=students.filter(x=>x.id!==id);
+    document.getElementById('stuForm').classList.add('open'); toast('✏ Edit and re-save.');
+  }
+
+  // Email preview
+  function previewEmail(inp){
+    const v=inp.value.trim().replace(/@.*$/,'');
+    document.getElementById('tEmailPreview').textContent = v ? v+'@learntrack.in' : '';
+  }
+
+  // ── SYNC DROPDOWNS — only students dept uses dynamic list
+  async function syncDropdowns(){
+
+  try{
+    const res = await fetch("http://localhost/learntrack/backend/get_departments.php");
+    const data = await res.json();
+
+    // Student dropdown
+    const stuSel = document.getElementById('sDept');
+    stuSel.innerHTML = '<option value="">-- Select Department --</option>';
+
+    // Teacher dropdown
+    const tchSel = document.getElementById('tDept');
+    tchSel.innerHTML = '<option value="">-- Select Department --</option>';
+
+    data.forEach(d => {
+      stuSel.innerHTML += `<option value="${d.name}">${d.name}</option>`;
+      tchSel.innerHTML += `<option value="${d.name}">${d.name}</option>`;
+    });
+
+  }catch(err){
+    console.error(err);
+    alert("Failed to load departments");
+  }
+}
+  // ── DASHBOARD REFRESH
+  function refreshDash(){
+    document.getElementById('deptCount').textContent=depts.length;
+    document.getElementById('tchCount').textContent=teachers.length;
+    document.getElementById('stuCount').textContent=students.length;
+
+    const pa=document.getElementById('progArea');
+    if(!depts.length){pa.innerHTML='<p style="color:#94a3b8;font-size:13px;">No departments yet.</p>';}
+    else{
+      pa.innerHTML=depts.map(d=>{
+        const pct=Math.min(100,Math.round(d.stu/(d.cap||1)*100));
+        const col=pct<60?'#10B981':pct<85?'#2563EB':'#ef4444';
+        return`<div style="margin-bottom:13px;">
+          <div style="display:flex;justify-content:space-between;font-size:13px;color:#334155;margin-bottom:4px;">
+            <span>${d.name}</span><span style="font-weight:700;color:${col};">${pct}%</span>
+          </div>
+          <div class="prog-bar"><div class="prog-fill" style="width:${pct}%;background:${col};"></div></div>
+        </div>`;
+      }).join('');
+    }
+
+    document.getElementById('recentTch').innerHTML=teachers.length
+      ?teachers.slice(-5).reverse().map(t=>`<li>${t.name} — ${t.dept}</li>`).join('')
+      :'<li>No teachers added yet</li>';
+
+    document.getElementById('recentStu').innerHTML=students.length
+      ?students.slice(-5).reverse().map(s=>`<li>${s.name} (${s.sid})</li>`).join('')
+      :'<li>No students added yet</li>';
+  }
+
+  // ── REPORTS
+  function viewReport(type){
+    const L='─'.repeat(52);
+    let title='', content='';
+    if(type==='dept'){
+      title='Departments Report';
+      content=`LEARNTRACK — DEPARTMENTS\nGenerated: ${new Date().toLocaleString()}\n\n${L}\n`;
+      content+=depts.length?depts.map(d=>`#${d.id}  ${d.name}\n    Head: ${d.head}  |  ${d.stu}/${d.cap} students\n`).join(''):'No departments yet.';
+    }else if(type==='tch'){
+      title='Teachers Report';
+      content=`LEARNTRACK — TEACHERS\nGenerated: ${new Date().toLocaleString()}\n\n${L}\n`;
+      content+=teachers.length?teachers.map(t=>`#${t.id}  ${t.name}\n    ${t.email}  |  ${t.dept}  |  ${t.subject}\n`).join(''):'No teachers yet.';
+    }else if(type==='stu'){
+      title='Students Report';
+      content=`LEARNTRACK — STUDENTS\nGenerated: ${new Date().toLocaleString()}\n\n${L}\n`;
+      content+=students.length?students.map(s=>`#${s.id}  ${s.name}  [${s.sid}]\n    ${s.dept}  |  ${s.year}\n`).join(''):'No students yet.';
+    }else{
+      title='Summary Report';
+      content=`LEARNTRACK — SUMMARY\nGenerated: ${new Date().toLocaleString()}\n\n${L}\nTotal Departments : ${depts.length}\nTotal Teachers    : ${teachers.length}\nTotal Students    : ${students.length}\n${L}\n`;
+      if(depts.length) content+='\nDepartments:\n'+depts.map(d=>`  • ${d.name}: ${d.stu} students`).join('\n');
+    }
+    document.getElementById('repTitle').textContent=title;
+    document.getElementById('repContent').textContent=content;
+    const ro=document.getElementById('repOut');
+    ro.style.display='block';
+    ro.scrollIntoView({behavior:'smooth'});
+  }
+
+  // ── SETTINGS ACTIONS
+  function exportData(){
+    const blob=new Blob([JSON.stringify({depts,teachers,students},null,2)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download='learntrack_data.json';a.click();
+    toast('⬇ Data exported!');
+  }
+  function clearAll(){
+    if(!confirm('Clear ALL data? Cannot be undone.'))return;
+    depts=[];teachers=[];students=[];dc=tc=sc=0;
+    renderDepts();renderTch();renderStu();refreshDash();
+    toast('🗑 All data cleared.');
+  }
+
+  function clearAll(){
+  if(!confirm('Clear ALL data? Cannot be undone.'))return;
+  depts=[];teachers=[];students=[];dc=tc=sc=0;
+  renderDepts();renderTch();renderStu();refreshDash();
+  toast('🗑 All data cleared.');
+}
+
+
+/* 📂 READ EXCEL FILE */
+document.getElementById("excelFile").addEventListener("change",function(e){
+
+ const file=e.target.files[0];
+ const reader=new FileReader();
+
+ reader.onload=function(evt){
+
+  const data=new Uint8Array(evt.target.result);
+  const workbook=XLSX.read(data,{type:'array'});
+  const sheet=workbook.Sheets[workbook.SheetNames[0]];
+
+  excelData=XLSX.utils.sheet_to_json(sheet);
+
+  toast("📂 Excel uploaded. Now click Generate Credentials");
+ };
+
+ reader.readAsArrayBuffer(file);
+
+});
+function clearAll(){
+  if(!confirm('Clear ALL data? Cannot be undone.'))return;
+  depts=[];teachers=[];students=[];dc=tc=sc=0;
+  renderDepts();renderTch();renderStu();refreshDash();
+  toast('🗑 All data cleared.');
+}
+
+
+/* ⚡ GENERATE EMAILS AND PASSWORDS */
+function generateStudents(){
+
+ if(excelData.length==0){
+  toast("⚠ Upload Excel first");
+  return;
+ }
+
+ excelData.forEach(r=>{
+
+  sc++;
+
+  const email = r.Name.toLowerCase().replace(/ /g,'') + "@learntrack.in";
+  const pass = Math.random().toString(36).slice(-8);
+
+  students.push({
+   id:sc,
+   sid:r["Reg No"],
+   name:r.Name,
+   dept:r.Class,
+   email:email,
+   pass:pass
+  });
+
+ });
+
+ renderStu();
+
+ toast("✅ Emails and passwords generated");
+
+}
+function downloadCredentials(){
+
+ if(students.length==0){
+  toast("⚠ No students available to download");
+  return;
+ }
+
+ let content="Name,RegNo,Department,Email,Password\n";
+
+ students.forEach(s=>{
+  content += `${s.name},${s.sid},${s.dept},${s.email},${s.pass}\n`;
+ });
+
+ const blob = new Blob([content],{type:'text/csv'});
+
+ const link = document.createElement("a");
+ link.href = URL.createObjectURL(blob);
+ link.download = "student_credentials.csv";
+
+ document.body.appendChild(link);
+ link.click();
+ document.body.removeChild(link);
+
+ toast("⬇ Credentials downloaded");
+
+}
+async function uploadExcel(){
+
+  const fileInput = document.getElementById("excelFile");
+  const file = fileInput.files[0];
+
+  if(!file){
+    alert("Please select a file");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const res = await fetch("http://localhost/learntrack/backend/upload_students.php", {
+      method: "POST",
+      body: formData
+    });
+
+    const result = await res.json();
+
+    if(result.status === "success"){
+      alert("✅ Students uploaded successfully!");
+      renderStu(); // refresh table
+    } else {
+      alert("Error: " + result.msg);
+    }
+
+  } catch(err){
+    console.error(err);
+    alert("Upload failed");
+  }
+}
+renderStu();   // after saving student
+renderTch();   // after saving teacher
+renderDept();  // after saving dept
+syncDropdowns();
+</script>
+</body>
+</html>

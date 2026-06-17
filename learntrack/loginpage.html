@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Learn Track - Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0d1424;
+      position: relative;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse at 15% 50%, rgba(37,99,235,.22) 0%, transparent 55%),
+        radial-gradient(ellipse at 85% 20%, rgba(124,58,237,.18) 0%, transparent 50%),
+        radial-gradient(ellipse at 55% 90%, rgba(6,182,212,.12) 0%, transparent 45%);
+      pointer-events: none; z-index: 0;
+    }
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(37,99,235,.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(37,99,235,.055) 1px, transparent 1px);
+      background-size: 42px 42px;
+      pointer-events: none; z-index: 0;
+    }
+
+    .orb { position: fixed; border-radius: 50%; pointer-events: none; z-index: 0; }
+    .orb-1 { width:320px;height:320px;top:-90px;left:-70px;background:radial-gradient(circle,rgba(37,99,235,.18) 0%,transparent 70%);animation:drift 9s ease-in-out infinite; }
+    .orb-2 { width:260px;height:260px;bottom:-70px;right:-50px;background:radial-gradient(circle,rgba(124,58,237,.16) 0%,transparent 70%);animation:drift 11s ease-in-out infinite reverse; }
+    .orb-3 { width:180px;height:180px;top:35%;right:12%;background:radial-gradient(circle,rgba(6,182,212,.1) 0%,transparent 70%);animation:drift 7s ease-in-out infinite 2s; }
+    @keyframes drift { 0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-22px) scale(1.06);} }
+
+    .card {
+      position: relative; z-index: 10;
+      background: rgba(14,22,44,0.82);
+      backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 24px; width: 100%; max-width: 420px;
+      padding: 0 0 32px;
+      box-shadow: 0 32px 80px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.07);
+      animation: slideUp .55s cubic-bezier(.16,1,.3,1) both;
+      overflow: hidden;
+    }
+    @keyframes slideUp { from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);} }
+
+    .profile-banner {
+      background: linear-gradient(135deg,#1a3fcc 0%,#4f46e5 45%,#7c3aed 100%);
+      padding: 28px 32px 20px;
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+      position: relative; overflow: hidden;
+    }
+    .profile-banner::before {
+      content:'';position:absolute;inset:0;
+      background-image:linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px);
+      background-size:30px 30px;pointer-events:none;
+    }
+    .profile-banner::after {
+      content:'';position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);
+      width:200px;height:40px;background:rgba(14,22,44,.82);border-radius:50%;filter:blur(12px);
+    }
+
+    .logo-row { display:flex;align-items:center;gap:10px;position:relative;z-index:1; }
+    .logo-icon {
+      width:38px;height:38px;border-radius:10px;
+      background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.25);
+      display:flex;align-items:center;justify-content:center;font-size:18px;
+      backdrop-filter:blur(6px);box-shadow:0 0 20px rgba(6,182,212,.35);
+    }
+    .logo-name { font-size:18px;font-weight:800;color:#fff;letter-spacing:.4px; }
+    .logo-dot { width:6px;height:6px;border-radius:50%;background:#06b6d4;box-shadow:0 0 8px #06b6d4;display:inline-block;margin-left:2px;vertical-align:middle; }
+
+    .avatar-wrap { position:relative;z-index:1;margin-top:4px; }
+    .avatar {
+      width:72px;height:72px;border-radius:50%;
+      background:linear-gradient(135deg,rgba(255,255,255,.22),rgba(255,255,255,.08));
+      border:2.5px solid rgba(255,255,255,.3);
+      display:flex;align-items:center;justify-content:center;font-size:30px;
+      box-shadow:0 0 0 4px rgba(255,255,255,.08),0 8px 24px rgba(0,0,0,.3);
+      cursor:pointer;transition:transform .2s,box-shadow .2s;
+    }
+    .avatar:hover { transform:scale(1.06);box-shadow:0 0 0 5px rgba(255,255,255,.12),0 12px 30px rgba(0,0,0,.35); }
+    .avatar-badge {
+      position:absolute;bottom:2px;right:2px;width:18px;height:18px;border-radius:50%;
+      background:#22c55e;border:2px solid rgba(14,22,44,.9);box-shadow:0 0 8px #22c55e;
+    }
+    .avatar-label { font-size:12px;font-weight:600;color:rgba(255,255,255,.65);letter-spacing:.5px;margin-top:2px;position:relative;z-index:1; }
+
+    .form-body { padding:28px 32px 0;display:flex;flex-direction:column;gap:0; }
+
+    label {
+      display:block;font-size:11px;font-weight:700;
+      color:rgba(148,163,184,.6);letter-spacing:1.2px;
+      text-transform:uppercase;margin-bottom:8px;
+    }
+
+    input[type="email"],
+    input[type="password"],
+    input[type="text"],
+    select {
+      width:100%;background:rgba(255,255,255,.05);
+      border:1.5px solid rgba(255,255,255,.1);border-radius:12px;
+      padding:12px 14px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:500;
+      color:rgba(226,232,240,.9);outline:none;margin-bottom:18px;
+      transition:border-color .2s,box-shadow .2s,background .2s;-webkit-appearance:none;
+    }
+    input::placeholder { color:rgba(148,163,184,.3); }
+    input:focus,select:focus {
+      border-color:#2563eb;background:rgba(37,99,235,.08);box-shadow:0 0 0 3px rgba(37,99,235,.15);
+    }
+    select { cursor:pointer; }
+    select option { background:#1a2a4a;color:#e2e8f0; }
+
+    /* ── password wrapper with eye icon ── */
+    .pass-wrap { position:relative;margin-bottom:18px; }
+    .pass-wrap input {
+      margin-bottom:0 !important;
+      padding-right:44px;
+    }
+    .eye-btn {
+      position:absolute;top:50%;right:13px;transform:translateY(-50%);
+      background:none;border:none;cursor:pointer;padding:3px;
+      color:rgba(148,163,184,.4);transition:color .2s;display:flex;align-items:center;
+    }
+    .eye-btn:hover { color:#06b6d4; }
+
+    /* ── role hint text ── */
+    .role-hint {
+      display:block;font-size:11px;font-weight:600;
+      margin-top:-13px;margin-bottom:18px;
+      padding-left:2px;transition:color .3s;
+    }
+    .hint-admin   { color:rgba(239,68,68,.6); }
+    .hint-teacher { color:rgba(234,179,8,.6); }
+    .hint-student { color:rgba(6,182,212,.6); }
+
+    .forgot-row { display:flex;justify-content:flex-end;margin-top:-4px;margin-bottom:22px; }
+    .forgot-row a { font-size:12.5px;font-weight:600;color:rgba(96,165,250,.75);text-decoration:none;transition:color .2s; }
+    .forgot-row a:hover { color:#06b6d4; }
+
+    #loginBtn {
+      width:100%;background:linear-gradient(135deg,#2563eb,#7c3aed);
+      border:none;border-radius:13px;padding:14px;
+      font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;color:#fff;cursor:pointer;
+      box-shadow:0 8px 28px rgba(37,99,235,.4);
+      transition:transform .2s,filter .2s,box-shadow .2s;
+      position:relative;overflow:hidden;letter-spacing:.3px;
+    }
+    #loginBtn::after { content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.14),transparent);opacity:0;transition:opacity .2s; }
+    #loginBtn:hover { transform:translateY(-2px);filter:brightness(1.1);box-shadow:0 14px 36px rgba(37,99,235,.5); }
+    #loginBtn:hover::after { opacity:1; }
+    #loginBtn:active { transform:translateY(0); }
+
+    .footer-txt { text-align:center;font-size:11.5px;color:rgba(148,163,184,.3);margin-top:22px;padding:0 32px; }
+
+    .role-strip { display:flex;gap:6px;margin-bottom:20px; }
+    .role-pill {
+      flex:1;text-align:center;padding:8px 4px;border-radius:10px;
+      font-size:12px;font-weight:700;
+      background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.07);
+      color:rgba(148,163,184,.45);cursor:pointer;transition:all .2s;letter-spacing:.2px;
+    }
+    .role-pill.active { background:rgba(37,99,235,.18);border-color:rgba(37,99,235,.5);color:#93c5fd; }
+    .role-pill:hover:not(.active) { background:rgba(255,255,255,.07);color:rgba(226,232,240,.7); }
+
+    .divider { height:1px;background:rgba(255,255,255,.07);margin:0 32px 24px; }
+    .strip-label { font-size:11px;font-weight:700;color:rgba(148,163,184,.5);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:8px; }
+  </style>
+</head>
+<body>
+
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <div class="card">
+    <div class="profile-banner">
+      <div class="logo-row">
+        <div class="logo-icon">🎓</div>
+        <div class="logo-name">Learn Track<span class="logo-dot"></span></div>
+      </div>
+      <div class="avatar-wrap">
+        <div class="avatar" id="roleAvatar" title="Profile">👤</div>
+        <div class="avatar-badge"></div>
+      </div>
+      <div class="avatar-label" id="avatarLabel">Welcome back</div>
+    </div>
+
+    <div style="height:24px;"></div>
+    <div class="divider"></div>
+
+    <div class="form-body">
+
+      <!-- Role pills -->
+      <div class="strip-label">Login as</div>
+      <div class="role-strip" id="rolePills">
+        <div class="role-pill" data-role="admin">🔐 Admin</div>
+        <div class="role-pill" data-role="teacher">👨‍🏫 Teacher</div>
+        <div class="role-pill active" data-role="student">🎓 Student</div>
+      </div>
+
+      <!-- Hidden select for JS logic -->
+      <select id="role" name="role" style="display:none;">
+        <option value="admin">Admin</option>
+        <option value="teacher">Teacher</option>
+        <option value="student" selected>Student</option>
+      </select>
+
+      <!-- Email -->
+      <label for="email">Email Address</label>
+      <input type="email" id="email" name="email" placeholder="student@learntrack" required />
+      <!-- ✅ Role-specific email hint -->
+      <span class="role-hint hint-student" id="emailHint">Use your student email: student@learntrack</span>
+
+      <!-- Password with eye toggle -->
+      <label for="password">Password</label>
+      <div class="pass-wrap">
+        <input type="password" id="password" name="password" placeholder="Enter your password" required />
+        <!-- ✅ Eye icon button -->
+        <button type="button" class="eye-btn" id="eyeBtn" title="Show / hide password">
+          <!-- Eye open -->
+          <svg id="iconEye" width="19" height="19" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          <!-- Eye off (hidden by default) -->
+          <svg id="iconEyeOff" width="19" height="19" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+               style="display:none;">
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+            <line x1="1" y1="1" x2="23" y2="23"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="forgot-row">
+        <a href="#">Forgot Password?</a>
+      </div>
+
+      <button id="loginBtn">Sign In →</button>
+    </div>
+
+    <p class="footer-txt">© 2026 Learn Track &nbsp;·&nbsp; All rights reserved</p>
+  </div>
+
+  <script>
+    // ── Auth data ──────────────────────────────────────
+    const users = [
+      { role:'admin',   email:'admin@learntrack',   password:'admin2006',   redirect:'admin.html' },
+      { role:'teacher', email:'teacher@learntrack', password:'teacher2006', redirect:'teacher.html' },
+      { role:'student', email:'student@learntrack', password:'student2006', redirect:'student.html' }
+    ];
+
+    // ── Role meta: avatar emoji, hint text, hint css class ──
+    const roleMeta = {
+      admin:   { emoji:'🔐', label:'Admin Portal',    hint:'Use your admin email: admin@learntrack',   hintClass:'hint-admin' },
+      teacher: { emoji:'👨‍🏫', label:'Teacher Portal', hint:'Use your faculty email: teacher@learntrack', hintClass:'hint-teacher' },
+      student: { emoji:'🎓', label:'Student Portal',  hint:'Use your student email: student@learntrack', hintClass:'hint-student' }
+    };
+
+    // ── Apply role UI update ───────────────────────────
+    function applyRole(role) {
+      const meta = roleMeta[role];
+      // avatar
+      document.getElementById('roleAvatar').textContent  = meta.emoji;
+      document.getElementById('avatarLabel').textContent = meta.label;
+      // email placeholder
+      document.getElementById('email').placeholder = users.find(u=>u.role===role).email;
+      // hint
+      const hint = document.getElementById('emailHint');
+      hint.textContent  = meta.hint;
+      hint.className    = 'role-hint ' + meta.hintClass;
+      // hidden select
+      document.getElementById('role').value = role;
+    }
+
+    // ── Login ─────────────────────────────────────────
+    document.getElementById('loginBtn').addEventListener('click', () => {
+      const role     = document.getElementById('role').value;
+      const email    = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const user     = users.find(u => u.role===role && u.email===email && u.password===password);
+      if (user) { window.location.href = user.redirect; }
+      else       { alert('Invalid credentials for selected role!'); }
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('loginBtn').click();
+    });
+
+    // ── Role pills ────────────────────────────────────
+    document.querySelectorAll('.role-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        document.querySelectorAll('.role-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        applyRole(pill.dataset.role);
+      });
+    });
+
+    // ── Password eye toggle ───────────────────────────
+    document.getElementById('eyeBtn').addEventListener('click', () => {
+      const inp        = document.getElementById('password');
+      const isPassword = inp.type === 'password';
+      inp.type         = isPassword ? 'text' : 'password';
+      document.getElementById('iconEye').style.display    = isPassword ? 'none'  : 'block';
+      document.getElementById('iconEyeOff').style.display = isPassword ? 'block' : 'none';
+      document.getElementById('eyeBtn').style.color       = isPassword ? '#06b6d4' : 'rgba(148,163,184,.4)';
+    });
+
+    // ── Init with default role (student) ─────────────
+    applyRole('student');
+  </script>
+
+</body>
+</html>
